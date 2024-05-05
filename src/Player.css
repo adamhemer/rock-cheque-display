@@ -1,0 +1,13 @@
+.PlayerScore {
+    flex-grow: 1;
+    text-align: center;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.PlayerProperties {
+    font-weight: 600;
+    font-size: 3.5vh;
+}

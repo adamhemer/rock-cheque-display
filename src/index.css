@@ -1,3 +1,55 @@
+* {
+  --aero: #5bc0ebff;
+  --persian-red: #c3423fff;
+  --maize: #eae151ff;
+  --outer-space: #404e4dff;
+  --viridian: #558564ff;
+  --persian-pink: #ff88dcff;
+  --french-violet: #6622ccff;
+}
+
+html, body, #root {
+}
+
+.QuestionGrid, .QuestionDisplay {
+  height: 88vh;
+}
+
+.QuestionDisplay {
+  display: flex;
+  justify-content: center; /* Align horizontal */
+  align-items: center; /* Align vertical */
+}
+
+.QuestionContent {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  justify-content: space-evenly; /* Align horizontal */
+  align-items: center; /* Align vertical */
+  flex-direction: column;
+}
+
+.QuestionContentTitle {
+
+}
+
+.QuestionContentImage {
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+}
+
+.QuestionContentAnswer {
+
+}
+
+iframe, .video {
+  width: 80%;
+  aspect-ratio: calc(16/9);
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -5,9 +57,24 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  background-color: #dbdbdb;
+
+  overflow: hidden;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+.FlexContainer {
+  display: flex;
+  flex-direction: row;
+}
+
+.PlayerFooter {
+  display: flex;
+  flex-direction: row;
+  height: 12vh;
 }
