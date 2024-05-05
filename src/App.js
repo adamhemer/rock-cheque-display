@@ -4,13 +4,25 @@ import Category from "./Category";
 import Player from "./Player";
 import axios from "axios";
 
+const STATES = {
+    SETUP: 0,       // Asigning players to buzzers, choosing colours, etc
+    DEMO: 1,        // Let players try out the remotes
+    SELECTION: 2,   // On the category board
+    WAITING: 3,     // Question shown but players cant buzz yet
+    ARMED: 4,       // Players can buzz in
+    BUZZED: 5,      // A player has buzzed in
+    ANSWERED: 6,    // The question has been answered correctly, show answer
+    TIEBREAK: 7,    // Extra question for tiebreaking
+    GAMEOVER: 8     // All questions are complete, show final scores
+}
+
 class App extends React.Component {
     constructor(props) {
         super(props);
-        this.showQuestionDisplay = false;
-        this.showQuestionGrid = true;
-        this.state = { 
-            board: []
+        this.state = {
+            board: [],
+            showQuestion: false,
+            showGrid: true
         };
 
         this.serverAddress = "http://127.0.0.1:8000/";
@@ -32,30 +44,62 @@ class App extends React.Component {
 
     componentDidMount() {
         this.fetchData();
+    }
 
+    componentWillUnmount() {
+        if (this.fetchTimeout) {
+            clearTimeout(this.fetchTimeout);
+        }
     }
 
     fetchData = () => {
         this.server.get('board-data')
-        .then(res => {
-            console.log(res);
-            this.setState({
-                board: res.data
+            .then(res => {
+                console.log(res);
+                this.setState({ board: res.data }, () => {
+                    this.fetchState();
+                    this.refreshCategories();
+                });
             });
-            this.refreshCategories();
-        });
     }
 
     fetchState = () => {
+        this.server.get('game-state')
+            .then(res => {
+                console.log(res);
 
+                this.setState({ gameState: res.data }, () => {
+                    if (this.state.gameState.state >= STATES.WAITING && this.state.gameState.state <= STATES.ANSWERED) {
+                        console.log("Question")
+                        this.setState({ showQuestion: true, showGrid: false });
+                    } else {
+                        this.setState({ showQuestion: false, showGrid: true });
+                    }
+
+                });
+
+                this.fetchTimeout = setTimeout(this.fetchState, 1000)
+
+            });
     }
 
     refreshCategories() {
-        this.categoriesObj = [];
+        let catObj = [];
+
         this.state.board.forEach((cat, i) => {
-            this.categoriesObj.push(<Category key={i} name={cat.title} questions={cat.questions} backgroundColour={this.colours[i]} ></Category>);
+            catObj.push(<Category key={i} name={cat.title} questions={cat.questions} backgroundColour={this.colours[i]} ></Category>);
         });
-        
+
+        this.setState({ categoriesObj: catObj });
+
+    }
+
+    playerFooter() {
+        if (!this.state.gameState) { return; }
+        return (
+        <div className="PlayerFooter">
+            {this.state.gameState.players.map(p => <Player name={p.name} score={p.points}></Player>)}
+        </div>)
     }
 
     render() {
@@ -63,7 +107,7 @@ class App extends React.Component {
             <div className="App">
                 <div
                     className="FlexContainer QuestionDisplay"
-                    style={{ display: this.showQuestionDisplay ? "flex" : "none" }}
+                    style={{ display: this.state.showQuestion ? "flex" : "none" }}
                 >
 
                     <div className="QuestionContent">
@@ -72,16 +116,16 @@ class App extends React.Component {
                             <source src="epicbreach.mp4" type="video/mp4"></source>
                         </video>
 
-                  
+
                         <p className="QuestionContentAnswer">Answer: Border Collie</p>
                     </div>
                 </div>
                 <div
                     className="FlexContainer QuestionGrid"
-                    style={{ display: this.showQuestionGrid ? "flex" : "none" }}
+                    style={{ display: this.state.showGrid ? "flex" : "none" }}
                 >
 
-                    {this.categoriesObj}
+                    {this.state.categoriesObj}
 
                     {/* <Category
                         name="Cat1"
@@ -110,7 +154,8 @@ class App extends React.Component {
                     ></Category> */}
                     {/* <Category name="The big boyz"   questions={[{ type: "Video",  question: "What is this?", pointValue: 100, source: "epicbreach.mp4" }, { type: "Text", pointValue: 1000, question: "I don't know" }]} backgroundColour="var(--french-violet)"></Category> */}
                 </div>
-                <div className="PlayerFooter">
+                {this.playerFooter()}
+                {/* <div className="PlayerFooter">
                     <Player name="Adam" score="100"></Player>
                     <Player name="Callum" score="100"></Player>
                     <Player name="Emily" score="100"></Player>
@@ -119,7 +164,7 @@ class App extends React.Component {
                     <Player name="Lauren" score="100"></Player>
                     <Player name="James" score="100"></Player>
                     <Player name="Beth" score="100"></Player>
-                </div>
+                </div> */}
             </div>
         );
     }
