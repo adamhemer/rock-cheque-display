@@ -16,12 +16,21 @@ const STATES = {
     GAMEOVER: 8     // All questions are complete, show final scores
 }
 
+const TYPES = {
+    TEXT: "Text",
+    IMAGE: "Image",
+    VIDEO: "Video",
+    AUDIO: "Audio"
+}
+
+
 class App extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             board: [],
             showQuestion: false,
+            activeQuestion: {},
             showGrid: true
         };
 
@@ -71,14 +80,22 @@ class App extends React.Component {
                 this.setState({ gameState: res.data }, () => {
                     if (this.state.gameState.state >= STATES.WAITING && this.state.gameState.state <= STATES.ANSWERED) {
                         console.log("Question")
-                        this.setState({ showQuestion: true, showGrid: false });
+
+                        this.setState({
+                            showQuestion: true,
+                            // activeQuestion: this.state.gameState.activeQuestion,
+                            // activeCategory: this.state.gameState.activeCategory,
+                            showGrid: false
+                        });
+
+                        console.log(this.state.gameState);
                     } else {
                         this.setState({ showQuestion: false, showGrid: true });
                     }
 
                 });
 
-                this.fetchTimeout = setTimeout(this.fetchState, 1000)
+                this.fetchTimeout = setTimeout(this.fetchData, 1000)
 
             });
     }
@@ -102,28 +119,61 @@ class App extends React.Component {
         </div>)
     }
 
+    questionCategoryHeader() {
+        if (!this.state.gameState || !this.state.gameState.activeCategory || !this.state.showQuestion) { return; }
+        return (
+            <div className="QuestionCategoryHeaderText">
+                <p>{this.state.gameState.activeCategory.title}</p>
+            </div>
+        )
+    }
+
+    questionContentTitle() {
+        if (!this.state.gameState || !this.state.gameState.activeCategory || !this.state.showQuestion) { return; }
+        return (
+            <p className="QuestionContentTitle">{this.state.gameState.activeQuestion.title}</p>
+        )
+    }
+
+    answerDisplay() {
+        if (!this.state.gameState || !this.state.gameState.activeQuestion) { return; }
+        return (
+            <div style={{ display: (this.state.gameState.state === STATES.ANSWERED && this.state.gameState.activeQuestion.answer) ? "block" : "none" }}>
+                <p className="QuestionContentAnswer">Answer: {this.state.gameState.activeQuestion.answer}</p>
+            </div>
+        )
+    }
+
     render() {
         return (
             <div className="App">
+                {this.questionCategoryHeader()}        
+                
                 <div
                     className="FlexContainer QuestionDisplay"
                     style={{ display: this.state.showQuestion ? "flex" : "none" }}
                 >
 
                     <div className="QuestionContent">
-                        <p className="QuestionContentTitle">What is this?</p>
-                        <video className="video" controls>
-                            <source src="epicbreach.mp4" type="video/mp4"></source>
-                        </video>
+                        {this.questionContentTitle()}
+
+                        <div style={{ display: this.state.activeQuestion.type === TYPES.IMAGE ? "block" : "none" }}>
+                        </div>
+
+                        <div style={{ display: this.state.activeQuestion.type === TYPES.AUDIO ? "block" : "none" }}>
+                        </div>
+
+                        <div style={{ display: this.state.activeQuestion.type === TYPES.VIDEO ? "block" : "none" }}>
+                            <video className="video" controls>
+                                <source src="epicbreach.mp4" type="video/mp4"></source>
+                            </video>
+                        </div>
 
 
-                        <p className="QuestionContentAnswer">Answer: Border Collie</p>
+                        {this.answerDisplay()}
                     </div>
                 </div>
-                <div
-                    className="FlexContainer QuestionGrid"
-                    style={{ display: this.state.showGrid ? "flex" : "none" }}
-                >
+                <div className="FlexContainer QuestionGrid" style={{ display: this.state.showGrid ? "flex" : "none" }}>
 
                     {this.state.categoriesObj}
 
