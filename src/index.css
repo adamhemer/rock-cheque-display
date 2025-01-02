@@ -9,10 +9,11 @@
 }
 
 html, body, #root {
+  height: 100vh;
 }
 
 .QuestionGrid, .QuestionDisplay {
-  height: 76vh;
+  height: 88vh;
 }
 
 .QuestionDisplay {
@@ -53,7 +54,11 @@ html, body, #root {
 
 }
 
-iframe, .video {
+.VideoContainer {
+  text-align: center;
+}
+
+iframe, .Video {
   width: 80%;
   aspect-ratio: calc(16/9);
 }

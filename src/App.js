@@ -16,6 +16,12 @@ const STATES = {
     GAMEOVER: 8     // All questions are complete, show final scores
 }
 
+const MEDIA_STATES = {
+    INITIAL: 0,
+    PLAY_QUESTION: 1,
+    PLAY_ANSWER: 2,
+}
+
 const TYPES = {
     TEXT: "Text",
     IMAGE: "Image",
@@ -31,7 +37,8 @@ class App extends React.Component {
             board: [],
             showQuestion: false,
             activeQuestion: {},
-            showGrid: true
+            showGrid: true,
+            mediaState: MEDIA_STATES.INITIAL
         };
 
         this.serverAddress = "http://127.0.0.1:8000/";
@@ -53,6 +60,8 @@ class App extends React.Component {
 
     componentDidMount() {
         this.fetchData();
+
+        // console.log(this.server.get("/public/epicbreach.mp4"))
     }
 
     componentWillUnmount() {
@@ -64,9 +73,15 @@ class App extends React.Component {
     fetchData = () => {
         this.server.get('board-data')
             .then(res => {
-                console.log(res);
+                // console.log(res);
                 this.setState({ board: res.data }, () => {
                     this.fetchState();
+                    // console.log("State:");
+                    // console.log(this.state.showQuestion);
+                    // console.log(this.state.activeQuestion.type);
+                    if (this.state.showQuestion && (this.state.gameState.activeQuestion.type === TYPES.VIDEO || this.state.gameState.activeQuestion.type === TYPES.AUDIO)) {
+                        this.fetchMediaState();
+                    }
                     this.refreshCategories();
                 });
             });
@@ -75,7 +90,7 @@ class App extends React.Component {
     fetchState = () => {
         this.server.get('game-state')
             .then(res => {
-                console.log(res);
+                // console.log(res);
 
                 this.setState({ gameState: res.data }, () => {
                     if (this.state.gameState.state >= STATES.WAITING && this.state.gameState.state <= STATES.ANSWERED) {
@@ -100,6 +115,56 @@ class App extends React.Component {
             });
     }
 
+    fetchMediaState = () => {
+        console.log("get media state");
+        this.server.get('media-state')
+            .then(res => {
+                console.log(res.data);
+                if (res.data !== this.state.mediaState) {
+                    this.setState({ mediaState: res.data }, () => {
+                        console.log(this.state.mediaState);
+                        switch (this.state.mediaState) {
+                            case (MEDIA_STATES.INITIAL):
+                                if (this.state.gameState.activeQuestion.type === TYPES.VIDEO) {
+                                    const vid = document.getElementsByTagName("video")[0];
+                                    vid.currentTime = this.state.gameState.activeQuestion.playFrom;
+                                    
+                                } else if (this.state.gameState.activeQuestion.type === TYPES.AUDIO) {
+                                    
+                                }
+                                break;
+
+                            case (MEDIA_STATES.PLAY_QUESTION):
+                                if (this.state.gameState.activeQuestion.type === TYPES.VIDEO) {
+                                    const vid = document.getElementsByTagName("video")[0];
+                                    vid.currentTime = this.state.gameState.activeQuestion.playFrom;
+                                    const duration = 1000 * (this.state.gameState.activeQuestion.playTo - this.state.gameState.activeQuestion.playFrom);
+                                    setTimeout(() => {
+                                        vid.pause();
+                                    }, duration)
+                                    vid.play();
+                                } else if (this.state.gameState.activeQuestion.type === TYPES.AUDIO) {
+                                    
+                                }
+                                break;
+
+                            case (MEDIA_STATES.PLAY_ANSWER):
+                                if (this.state.gameState.activeQuestion.type === TYPES.VIDEO) {
+                                    const vid = document.getElementsByTagName("video")[0];
+                                    vid.play();
+                                } else if (this.state.gameState.activeQuestion.type === TYPES.AUDIO) {
+                                    
+                                }
+                                break;
+
+                            default:
+                                break;
+                        }
+                    });
+                }
+            });
+    }
+
     refreshCategories() {
         let catObj = [];
 
@@ -115,7 +180,7 @@ class App extends React.Component {
         if (!this.state.gameState) { return; }
         return (
         <div className="PlayerFooter">
-            {this.state.gameState.players.map(p => <Player name={p.name} score={p.points}></Player>)}
+            {this.state.gameState.players.map(p => <Player key={p.name} name={p.name} score={p.points}></Player>)}
         </div>)
     }
 
@@ -123,7 +188,7 @@ class App extends React.Component {
         if (!this.state.gameState || !this.state.gameState.activeCategory || !this.state.showQuestion) { return; }
         return (
             <div className="QuestionCategoryHeaderText">
-                <p>{this.state.gameState.activeCategory.title}</p>
+                <p>{this.state.gameState.activeCategory.title} - {this.state.gameState.activeQuestion.reward}</p>
             </div>
         )
     }
@@ -144,10 +209,37 @@ class App extends React.Component {
         )
     }
 
+    displayImageQuestion() {
+        if (!this.state.gameState || !this.state.gameState.activeQuestion) { return; }
+        return (
+            <div style={{ display: this.state.gameState.activeQuestion.type === TYPES.IMAGE ? "block" : "none" }}>
+            </div>
+        )
+    }
+
+    displayAudioQuestion() {
+        if (!this.state.gameState || !this.state.gameState.activeQuestion) { return; }
+        return (
+            <div style={{ display: this.state.gameState.activeQuestion.type === TYPES.AUDIO ? "block" : "none" }}>
+            </div>
+        )
+    }
+
+    displayVideoQuestion() {
+        if (!this.state.gameState || !this.state.gameState.activeQuestion) { return; }
+        return (
+            <div class="VideoContainer" style={{ display: this.state.gameState.activeQuestion.type === TYPES.VIDEO ? "block" : "none" }}>
+                <video className="Video">
+                    <source src={this.state.gameState.activeQuestion.src} type="video/mp4"></source>
+                </video>
+            </div>
+        )
+    }
+
     render() {
         return (
             <div className="App">
-                {this.questionCategoryHeader()}        
+                {this.questionCategoryHeader()}
                 
                 <div
                     className="FlexContainer QuestionDisplay"
@@ -157,18 +249,9 @@ class App extends React.Component {
                     <div className="QuestionContent">
                         {this.questionContentTitle()}
 
-                        <div style={{ display: this.state.activeQuestion.type === TYPES.IMAGE ? "block" : "none" }}>
-                        </div>
-
-                        <div style={{ display: this.state.activeQuestion.type === TYPES.AUDIO ? "block" : "none" }}>
-                        </div>
-
-                        <div style={{ display: this.state.activeQuestion.type === TYPES.VIDEO ? "block" : "none" }}>
-                            <video className="video" controls>
-                                <source src="epicbreach.mp4" type="video/mp4"></source>
-                            </video>
-                        </div>
-
+                        {this.displayImageQuestion()}
+                        {this.displayAudioQuestion()}
+                        {this.displayVideoQuestion()}
 
                         {this.answerDisplay()}
                     </div>
