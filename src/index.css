@@ -9,6 +9,7 @@
 }
 
 html, body, #root {
+  height: 100vh;
 }
 
 .QuestionGrid, .QuestionDisplay {
@@ -31,6 +32,14 @@ html, body, #root {
   flex-direction: column;
 }
 
+.QuestionCategoryHeaderText {
+  display: flex;
+  height: 12vh;
+  justify-content: space-evenly; /* Align horizontal */
+  align-items: center; /* Align vertical */
+  /* margin: 3vh; */
+}
+
 .QuestionContentTitle {
 
 }
@@ -45,7 +54,11 @@ html, body, #root {
 
 }
 
-iframe, .video {
+.VideoContainer {
+  text-align: center;
+}
+
+iframe, .Video {
   width: 80%;
   aspect-ratio: calc(16/9);
 }
