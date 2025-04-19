@@ -12,8 +12,12 @@ html, body, #root {
   height: 100vh;
 }
 
-.QuestionGrid, .QuestionDisplay {
+.QuestionGrid { /*}, .QuestionDisplay {*/
   height: 88vh;
+}
+
+.QuestionDisplay {
+  height: 76vh;
 }
 
 .QuestionDisplay {
@@ -59,7 +63,8 @@ html, body, #root {
 }
 
 iframe, .Video {
-  width: 80%;
+  height: 75vh;
+  /* width: 80%; */
   aspect-ratio: calc(16/9);
 }
 
@@ -90,4 +95,46 @@ code {
   display: flex;
   flex-direction: row;
   height: 12vh;
+}
+
+.player-list-item {
+  font-size: 3vh;
+  line-height: 4vh;
+  width: 10vw;
+  padding: 3% 5%;
+  margin: 2%;
+}
+
+.PlayerGrid {
+  margin: 20vh 20vw;
+  width: 60vw;
+  height: 60vh;
+  justify-content: center; /* Align horizontal */
+  align-items: center; /* Align vertical */
+  align-content: center;
+  flex-wrap: wrap;
+  flex-direction: row;
+}
+
+#DisconnectedOverlay {
+  position: fixed; /* Sit on top of the page content */
+  display: none; /* Hidden by default */
+  width: 100%; /* Full width (cover the whole page) */
+  height: 100%; /* Full height (cover the whole page) */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.7); /* Black background with opacity */
+  z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
+  cursor: pointer; /* Add a pointer on hover */
+}
+
+#DisconnectedText {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-size: 5vh;
+  transform: translate(-50%, -50%);
+  color: white;
 }

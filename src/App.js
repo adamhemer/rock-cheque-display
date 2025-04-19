@@ -2,6 +2,7 @@ import React from "react";
 import "./index.css";
 import Category from "./Category";
 import Player from "./Player";
+import LargePlayer from "./LargePlayer";
 import axios from "axios";
 
 const STATES = {
@@ -38,7 +39,9 @@ class App extends React.Component {
             showQuestion: false,
             activeQuestion: {},
             showGrid: true,
-            mediaState: MEDIA_STATES.INITIAL
+            mediaState: MEDIA_STATES.INITIAL,
+            gameState: { players: [], state: STATES.SETUP },
+            serverResponding: false
         };
 
         this.serverAddress = "http://127.0.0.1:8000/";
@@ -68,12 +71,15 @@ class App extends React.Component {
         if (this.fetchTimeout) {
             clearTimeout(this.fetchTimeout);
         }
+        if (this.fetchDataTimeout) {
+            clearTimeout(this.fetchDataTimeout);
+        }
     }
 
     fetchData = () => {
         this.server.get('board-data')
             .then(res => {
-                // console.log(res);
+                this.state.serverResponding = true;
                 this.setState({ board: res.data }, () => {
                     this.fetchState();
                     // console.log("State:");
@@ -84,14 +90,23 @@ class App extends React.Component {
                     }
                     this.refreshCategories();
                 });
+            })
+            .catch(err => {
+                if (err.code === "ECONNABORTED") {
+                    console.log("Server fetch data timeout.");
+                    this.state.serverResponding = false;
+                    console.log(this.state.serverResponding);
+                    this.fetchDataTimeout = setTimeout(this.fetchData, 1000);
+                } else {
+                    throw err;
+                }
             });
     }
 
     fetchState = () => {
         this.server.get('game-state')
             .then(res => {
-                // console.log(res);
-
+                this.state.serverResponding = true;
                 this.setState({ gameState: res.data }, () => {
                     if (this.state.gameState.state >= STATES.WAITING && this.state.gameState.state <= STATES.ANSWERED) {
                         console.log("Question")
@@ -107,11 +122,16 @@ class App extends React.Component {
                     } else {
                         this.setState({ showQuestion: false, showGrid: true });
                     }
-
-                });
-
+                })
                 this.fetchTimeout = setTimeout(this.fetchData, 1000)
-
+            }).catch(err => {
+                if (err.code === "ECONNABORTED") {
+                    console.log("Server fetch state timeout.");
+                    this.state.serverResponding = false;
+                    this.fetchTimeout = setTimeout(this.fetchData, 1000)
+                } else {
+                    throw err;
+                }
             });
     }
 
@@ -119,6 +139,7 @@ class App extends React.Component {
         console.log("get media state");
         this.server.get('media-state')
             .then(res => {
+                this.state.serverResponding = true;
                 console.log(res.data);
                 if (res.data !== this.state.mediaState) {
                     this.setState({ mediaState: res.data }, () => {
@@ -162,6 +183,14 @@ class App extends React.Component {
                         }
                     });
                 }
+            })
+            .catch(err => {
+                if (err.code === "ECONNABORTED") {
+                    console.log("Server media state fetch timeout.");
+                    this.state.serverResponding = false;
+                } else {
+                    throw err;
+                }
             });
     }
 
@@ -178,9 +207,21 @@ class App extends React.Component {
 
     playerFooter() {
         if (!this.state.gameState) { return; }
+
+        var playerBuzzed = false;
+        const playerFooterJSX = this.state.gameState.players.map(p =>
+        {
+            if (this.state.gameState.buzzedPlayer) {
+                playerBuzzed = (this.state.gameState.buzzedPlayer.name === p.name);
+            } else {
+                playerBuzzed = false;
+            }
+            return <Player selected={playerBuzzed} key={p.name} name={p.name} score={p.points} colour={p.colour}></Player>;
+        });
+
         return (
         <div className="PlayerFooter">
-            {this.state.gameState.players.map(p => <Player key={p.name} name={p.name} score={p.points}></Player>)}
+            {playerFooterJSX}
         </div>)
     }
 
@@ -236,68 +277,61 @@ class App extends React.Component {
         )
     }
 
+    showPlayersSetup() {
+        if (this.state.gameState.players.length === 0) {
+            return (
+                <div className="PlayerSetup">
+                    <p>Waiting for players...</p>
+                </div>
+            )
+        } else {
+            let players = this.state.gameState.players.map(p => <LargePlayer
+                                                                            name={p.name}
+                                                                            index={p.buzzer}
+                                                                            colour={p.colour}>
+                                                                </LargePlayer>)
+            return (players)
+        }
+    }
+
+    disconnectedOverlay() {
+        return (
+            <div id="DisconnectedOverlay" style={{ display: this.state.serverResponding ? "none" : "block" }}>
+                <p id="DisconnectedText">Server disconnected</p>
+            </div>
+        );
+    }
+
     render() {
         return (
             <div className="App">
-                {this.questionCategoryHeader()}
-                
-                <div
-                    className="FlexContainer QuestionDisplay"
-                    style={{ display: this.state.showQuestion ? "flex" : "none" }}
-                >
 
-                    <div className="QuestionContent">
-                        {this.questionContentTitle()}
+                <div style={{ display: this.state.gameState.state !== STATES.SETUP ? "block" : "none" }}>
 
-                        {this.displayImageQuestion()}
-                        {this.displayAudioQuestion()}
-                        {this.displayVideoQuestion()}
+                    {this.questionCategoryHeader()}
+                    <div className="FlexContainer QuestionDisplay" style={{ display: this.state.showQuestion ? "flex" : "none" }}>
 
-                        {this.answerDisplay()}
+                        <div className="QuestionContent">
+                            {this.questionContentTitle()}
+
+                            {this.displayImageQuestion()}
+                            {this.displayAudioQuestion()}
+                            {this.displayVideoQuestion()}
+
+                            {this.answerDisplay()}
+                        </div>
                     </div>
+                    <div className="FlexContainer QuestionGrid" style={{ display: this.state.showGrid ? "flex" : "none" }}>
+                        {this.state.categoriesObj}
+                    </div>
+                    {this.playerFooter()}
                 </div>
-                <div className="FlexContainer QuestionGrid" style={{ display: this.state.showGrid ? "flex" : "none" }}>
 
-                    {this.state.categoriesObj}
-
-                    {/* <Category
-                        name="Cat1"
-                        questionCount="4"
-                        backgroundColour="var(--aero)"
-                    ></Category>
-                    <Category
-                        name="Test"
-                        questionCount="3"
-                        backgroundColour="var(--persian-red)"
-                    ></Category>
-                    <Category
-                        name="Animals"
-                        questionCount="5"
-                        backgroundColour="var(--maize)"
-                    ></Category>
-                    <Category
-                        name="Famous quotes"
-                        questionCount="7"
-                        backgroundColour="var(--persian-pink)"
-                    ></Category>
-                    <Category
-                        name="The big boyz"
-                        questionCount="3"
-                        backgroundColour="var(--french-violet)"
-                    ></Category> */}
-                    {/* <Category name="The big boyz"   questions={[{ type: "Video",  question: "What is this?", pointValue: 100, source: "epicbreach.mp4" }, { type: "Text", pointValue: 1000, question: "I don't know" }]} backgroundColour="var(--french-violet)"></Category> */}
+                <div className="FlexContainer PlayerGrid" style={{ display: this.state.gameState.state === STATES.SETUP ? "flex" : "none" }}>
+                    {this.showPlayersSetup()}
                 </div>
-                {this.playerFooter()}
-                {/* <div className="PlayerFooter">
-                    <Player name="Adam" score="100"></Player>
-                    <Player name="Callum" score="100"></Player>
-                    <Player name="Emily" score="100"></Player>
-                    <Player name="Koni" score="100"></Player>
-                    <Player name="Hayley" score="100"></Player>
-                    <Player name="Lauren" score="100"></Player>
-                    <Player name="James" score="100"></Player>
-                    <Player name="Beth" score="100"></Player>
-                </div> */}
+
+                {this.disconnectedOverlay()}
             </div>
         );
     }
