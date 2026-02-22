@@ -5,9 +5,39 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
+    margin: 1vh;
+    border-radius: 2vh;
+
+    animation: none;
+}
+
+.PlayerScore.selected {
+    animation: buzzed 2s ease-in-out;
+    animation-iteration-count: infinite;
 }
 
 .PlayerProperties {
     font-weight: 600;
     font-size: 3.5vh;
+}
+
+.PlayerLate {
+    position: absolute;
+    animation: rollout 4s linear;
+    animation-fill-mode: forwards;
+    background-color: white !important;
+    border: 0.5vh solid black;
+    /* border-radius: 3vh; */
+    padding: 2vh;
+}
+
+@keyframes rollout {
+  0% { transform: translate(10%, -50px); opacity: 1;}
+  100% { transform: translate(10%, -150px); opacity: 0;}
+}
+
+@keyframes buzzed {
+  0% { transform: scale(0.9);}
+  50% { transform: scale(1.1);}
+  100% { transform: scale(0.9);}
 }

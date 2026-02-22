@@ -216,7 +216,7 @@ class App extends React.Component {
             } else {
                 playerBuzzed = false;
             }
-            return <Player selected={playerBuzzed} key={p.name} name={p.name} score={p.points} colour={p.colour}></Player>;
+            return <Player selected={playerBuzzed} key={p.name} name={p.name} score={p.points} colour={p.colour} lateBy={p.buzzLate}></Player>;
         });
 
         return (
@@ -252,8 +252,13 @@ class App extends React.Component {
 
     displayImageQuestion() {
         if (!this.state.gameState || !this.state.gameState.activeQuestion) { return; }
+        let src = this.state.gameState.activeQuestion.src;
+        if (this.state.gameState.state === STATES.ANSWERED && this.state.gameState.activeQuestion.answer_src) {
+            src = this.state.gameState.activeQuestion.answer_src;
+        }
         return (
             <div style={{ display: this.state.gameState.activeQuestion.type === TYPES.IMAGE ? "block" : "none" }}>
+                <img className="QuestionImage" src={src} alt="Question"></img>
             </div>
         )
     }
@@ -294,6 +299,26 @@ class App extends React.Component {
         }
     }
 
+    showPlayersGameOver() {
+        if (this.state.gameState.players.length === 0) {
+            return (
+                <div className="PlayerSetup">
+                    <p>Gameover, but with no players...?</p>
+                </div>
+            )
+        } else {
+            let winnerScore = Math.max(...(this.state.gameState.players.map(p => p.points)));
+            let players = this.state.gameState.players.map(p => <LargePlayer
+                                                                            name={p.name}
+                                                                            index={p.buzzer}
+                                                                            colour={p.colour}
+                                                                            score={p.points}
+                                                                            winner={p.points === winnerScore}>
+                                                                </LargePlayer>)
+            return (players)
+        }
+    }
+
     disconnectedOverlay() {
         return (
             <div id="DisconnectedOverlay" style={{ display: this.state.serverResponding ? "none" : "block" }}>
@@ -306,7 +331,7 @@ class App extends React.Component {
         return (
             <div className="App">
 
-                <div style={{ display: this.state.gameState.state !== STATES.SETUP ? "block" : "none" }}>
+                <div style={{ display: (this.state.gameState.state !== STATES.SETUP) && (this.state.gameState.state !== STATES.GAMEOVER) ? "block" : "none" }}>
 
                     {this.questionCategoryHeader()}
                     <div className="FlexContainer QuestionDisplay" style={{ display: this.state.showQuestion ? "flex" : "none" }}>
@@ -329,6 +354,13 @@ class App extends React.Component {
 
                 <div className="FlexContainer PlayerGrid" style={{ display: this.state.gameState.state === STATES.SETUP ? "flex" : "none" }}>
                     {this.showPlayersSetup()}
+                </div>
+
+                <div style={{ display: this.state.gameState.state === STATES.GAMEOVER ? "block" : "none" }}>
+                    <p style={{ marginTop: "20vh", fontSize: "8vh" }}>Winner!</p>
+                    <div className="FlexContainer PlayerGrid" style={{marginTop: 0}}>
+                        {this.showPlayersGameOver()}
+                    </div>
                 </div>
 
                 {this.disconnectedOverlay()}

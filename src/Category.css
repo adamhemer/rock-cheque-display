@@ -14,11 +14,12 @@
     /* margin: 10vh 0; */
     height: 10vh;
 
-    padding: 1vh;
+    /* padding: 1vh; */
 
     display: flex;
     justify-content: center; /* Align horizontal */
     align-items: center; /* Align vertical */
 
     text-decoration: none;
+    /* border-bottom: 0.5vh solid black;; */
 }

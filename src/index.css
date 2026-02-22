@@ -17,7 +17,7 @@ html, body, #root {
 }
 
 .QuestionDisplay {
-  height: 76vh;
+  height: 80vh;
 }
 
 .QuestionDisplay {
@@ -38,9 +38,10 @@ html, body, #root {
 
 .QuestionCategoryHeaderText {
   display: flex;
-  height: 12vh;
+  height: 8vh;
   justify-content: space-evenly; /* Align horizontal */
   align-items: center; /* Align vertical */
+  border-bottom: 0.5vh solid black;
   /* margin: 3vh; */
 }
 
@@ -63,9 +64,13 @@ html, body, #root {
 }
 
 iframe, .Video {
-  height: 75vh;
+  height: 65vh;
   /* width: 80%; */
   aspect-ratio: calc(16/9);
+}
+
+img {
+  height: 65vh;
 }
 
 body {
@@ -95,6 +100,7 @@ code {
   display: flex;
   flex-direction: row;
   height: 12vh;
+  /* background-color: black; */
 }
 
 .player-list-item {
@@ -137,4 +143,15 @@ code {
   font-size: 5vh;
   transform: translate(-50%, -50%);
   color: white;
+}
+
+.Winner {
+  animation: pulsing 2s ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+@keyframes pulsing {
+  0% { transform: scale(1.1);}
+  50% { transform: scale(1.25);}
+  100% { transform: scale(1.1);}
 }

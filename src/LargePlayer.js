@@ -16,9 +16,13 @@ class LargePlayer extends React.Component {
     }
 
     render() {
+        let secondRowText = `Buzzer ${this.props.index}`;
+        if (this.props.score != null) {
+            secondRowText = `${this.props.score} Points`;
+        }
         return (
-            <div className="player-list-item" style={{ border: "5px solid #" + this.props.colour, backgroundColor: `hsl(from #${this.props.colour} h calc(s - 20) calc(l + 20))`}}>
-                {this.props.name}<br></br><span id="player-buzzer-text">Buzzer {this.props.index}</span>
+            <div className={`player-list-item ${this.props.winner ? "Winner" : ""}`} style={{ border: "5px solid #" + this.props.colour, backgroundColor: `hsl(from #${this.props.colour} h calc(s - 20) calc(l + 20))`}}>
+                {this.props.name}<br></br><span id="player-buzzer-text">{secondRowText}</span>
             </div>
         );
     }
