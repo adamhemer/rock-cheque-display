@@ -85,7 +85,7 @@ class App extends React.Component {
                     // console.log("State:");
                     // console.log(this.state.showQuestion);
                     // console.log(this.state.activeQuestion.type);
-                    if (this.state.showQuestion && (this.state.gameState.activeQuestion.type === TYPES.VIDEO || this.state.gameState.activeQuestion.type === TYPES.AUDIO)) {
+                    if (this.state.showQuestion && this.state.gameState.activeQuestion && (this.state.gameState.activeQuestion.type === TYPES.VIDEO || this.state.gameState.activeQuestion.type === TYPES.AUDIO)) {
                         this.fetchMediaState();
                     }
                     this.refreshCategories();
